@@ -9,8 +9,7 @@ All distance units are the light's wavelength.
 
 See the top of phasor.py for how to import the functions into Python 3! The matplotlib module is required. I thought it would be interesting to not import the numpy module, so I don't import it!
 
-To complete an animation, close the figure window. Or, you may set...  
-   animate = False
+To complete an animation, close the figure window. Or, you may set *animate = False* in phasor.py.
 
 According to Kirchhoff's diffraction formula, intensity of far screen
 (Fraunhofer) diffraction through a single slit acquires an obliquity factor of
