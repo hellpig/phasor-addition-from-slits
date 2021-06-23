@@ -3,11 +3,13 @@
 # import this Python-3 file via:
 #   from phasor import *
 #
-# reload via:
-#   from importlib import reload
-#   import phasor
-#   reload(phasor)
-#   from phasor import *
+# After making changes to this file, reload via:
+"""
+from importlib import reload
+import phasor
+reload(phasor)
+from phasor import *
+"""
 # Only the last two lines need to be run if reloading the next time
 #
 # (c) 2021 Bradley Knockel
@@ -26,7 +28,7 @@ from matplotlib.widgets import Slider, TextBox
 ### global parameters
 
 
-figSize = 5.6   # size of figures in inches in both dimensions
+figSize = 5.6   # size of figures in both dimensions (in inches)
 
 pi = 3.141592653589793
 
@@ -34,8 +36,7 @@ R = .025     #radius of circles (in units where 1 is figSize)
 
 
 # For the code to complete after the animation, close the figure window.
-# You may also set...
-#   animate = False
+# You may also set  animate = False  to prevent having to do this
 
 animate = True
 
@@ -67,8 +68,10 @@ def sequence(a, stepSize, b):
 # y[] is the output
 def makeAnimation(N, phaseList, Llist, y, thetaList = []):
 
+  # all input and output lists should be this length
   length = len(phaseList)
 
+  # setup the figure
   if animate:
     fig, ax = plt.subplots()
     ax.axis('off')   # doing this here is redundant, but it prevents a flicker of the axes
@@ -76,26 +79,30 @@ def makeAnimation(N, phaseList, Llist, y, thetaList = []):
     circle1 = plt.Circle(( 0.5 , 0.5 ), R, fill=False )
     fig.add_artist(circle1)
 
+  # for some reason, passing in y[] is needed for animation.FuncAnimation() to work correctly
   def animateFunc(frame, y):
     phase = phaseList[frame]
     L = Llist[frame]
 
+    # remove stuff from previous frame
     if animate:
-        global circle2
+        global circle2   # so any previous circle2 can be removed
         ax.clear()
         ax.axis('off')
 
-        if frame:
+        if frame:      # for all but first frame
             circle2.remove()
 
+    # here are the actual important calculations
     tip = [.5, .5]  #begin in center of figure
     for i in range(N):
-        theta = i*phase
-        tipnew = [tip[0] + L*math.cos(theta), tip[1] + L*math.sin(theta)]
+        angle = i*phase
+        tipnew = [tip[0] + L*math.cos(angle), tip[1] + L*math.sin(angle)]
         if animate:
             ax.annotate("", tuple(tipnew), xytext=tuple(tip),
               arrowprops=dict(arrowstyle="->"), xycoords='figure fraction')   # draw arrow
         tip = tipnew
+    y[frame] = ((tip[0]-.5)**2 + (tip[1]-.5)**2 )**0.5
 
     if animate:
 
@@ -108,30 +115,28 @@ def makeAnimation(N, phaseList, Llist, y, thetaList = []):
 
         plt.draw()
 
-    y[frame] = ((tip[0]-.5)**2 + (tip[1]-.5)**2 )**0.5
-
-    # the following still makes you wiggle your mouse after it closes!
-    #if frame == length-1:
-    #   plt.close()
+        # The following still required me to wiggle my mouse after window closes!
+#        if frame == length-1:
+#           plt.close()
 
     return []
 
 
   if animate:
 
-    # I use an init function to prevent it calling animateFunc(0) twice
+    # I use an init function to prevent animation.FuncAnimation() calling animateFunc(0) twice
     def init():
         return []
 
-    # make the animation!
+    # make the animation! And caculate y[]
     _ = animation.FuncAnimation(fig, animateFunc, init_func=init, frames=length, interval=t, blit=True, fargs=(y,), repeat=False)
     plt.show()
 
   else:
 
+    # hijack animateFunc() to calculate y[]
     for i in range(length):
-         animateFunc(i,y)  # hijack animateFunc() to calculate y[]
-
+         animateFunc(i,y)
 
 
 
