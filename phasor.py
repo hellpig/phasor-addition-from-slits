@@ -40,7 +40,7 @@ R = .025     #radius of circles (in units where 1 is figSize)
 
 animate = True
 
-t = 1        #pause interval for animation (in milliseconds)
+t = 10        #pause interval for animation (in milliseconds)
 
 
 
@@ -73,70 +73,67 @@ def makeAnimation(N, phaseList, Llist, y, thetaList = []):
 
   # setup the figure
   if animate:
-    fig, ax = plt.subplots()
-    ax.axis('off')   # doing this here is redundant, but it prevents a flicker of the axes
-    fig.set_size_inches( figSize, figSize )
-    circle1 = plt.Circle(( 0.5 , 0.5 ), R, fill=False )
-    fig.add_artist(circle1)
+
+      fig, ax = plt.subplots()
+      ax.axis('off')   # doing this here is redundant, but it prevents a flicker of the axes
+      fig.set_size_inches( figSize, figSize )
+
+      ann = ax.annotate('', (0.1, 0.1), xycoords = 'figure fraction')
+
+      # I put circles on fig (not ax) to get them to line up with arrows
+      circle1 = plt.Circle(( 0.5 , 0.5 ), R, fill=False )
+      fig.add_artist(circle1)
+      circle2 = plt.Circle(( 0.5 , 0.5 ), R, fill=False )
+      fig.add_artist(circle2)
 
   # for some reason, passing in y[] is needed for animation.FuncAnimation() to work correctly
-  def animateFunc(frame, y):
-    phase = phaseList[frame]
-    L = Llist[frame]
+  def animateFunc(frame):
+      phase = phaseList[frame]
+      L = Llist[frame]
 
-    # remove stuff from previous frame
-    if animate:
-        global circle2   # so any previous circle2 can be removed
-        ax.clear()
-        ax.axis('off')
+      # remove stuff (the animation doesn't work unless I do this!)
+      if animate:
+          ax.clear()
+          ax.axis('off')
 
-        if frame:      # for all but first frame
-            circle2.remove()
+      # here are the actual important calculations
+      tip = [.5, .5]  #begin in center of figure
+      for i in range(N):
+          angle = i*phase
+          tipnew = [tip[0] + L*math.cos(angle), tip[1] + L*math.sin(angle)]
+          if animate:
+              ax.annotate("", tuple(tipnew), xytext=tuple(tip),
+                arrowprops=dict(arrowstyle="->"), xycoords='figure fraction')   # draw arrow
+          tip = tipnew
+      y[frame] = ((tip[0]-.5)**2 + (tip[1]-.5)**2 )**0.5
 
-    # here are the actual important calculations
-    tip = [.5, .5]  #begin in center of figure
-    for i in range(N):
-        angle = i*phase
-        tipnew = [tip[0] + L*math.cos(angle), tip[1] + L*math.sin(angle)]
-        if animate:
-            ax.annotate("", tuple(tipnew), xytext=tuple(tip),
-              arrowprops=dict(arrowstyle="->"), xycoords='figure fraction')   # draw arrow
-        tip = tipnew
-    y[frame] = ((tip[0]-.5)**2 + (tip[1]-.5)**2 )**0.5
+      if animate:
 
-    if animate:
+          if len(thetaList):
+              ann.set_text('θ = ' + str(round(thetaList[frame]*180/pi,4)) + '°')
 
-        if len(thetaList):
-            ax.annotate('θ = ' + str(round(thetaList[frame]*180/pi,4)) + '°', (0.1, 0.1))
+          circle2.center = tuple(tip)
 
-        # I put circles on fig (not ax) to get them to line up with arrows
-        circle2 = plt.Circle(tuple(tip), R, fill=False )
-        fig.add_artist(circle2)
+          plt.draw()
 
-        plt.draw()
+#          # The following still required me to wiggle my mouse after window closes!
+#          if frame == length-1:
+#             plt.close()
 
-        # The following still required me to wiggle my mouse after window closes!
-#        if frame == length-1:
-#           plt.close()
-
-    return []
+      return
 
 
   if animate:
 
-    # I use an init function to prevent animation.FuncAnimation() calling animateFunc(0) twice
-    def init():
-        return []
-
-    # make the animation! And caculate y[]
-    _ = animation.FuncAnimation(fig, animateFunc, init_func=init, frames=length, interval=t, blit=True, fargs=(y,), repeat=False)
-    plt.show()
+      # make the animation! And calculate y[]
+      _ = animation.FuncAnimation(fig, animateFunc, frames=length, interval=t, repeat=False)
+      plt.show()
 
   else:
 
-    # hijack animateFunc() to calculate y[]
-    for i in range(length):
-         animateFunc(i,y)
+      # hijack animateFunc() to calculate y[]
+      for i in range(length):
+          animateFunc(i)
 
 
 
@@ -216,35 +213,38 @@ def phasors(N):
   ## make 3rd figure; it's interactive!
 
   fig, ax = plt.subplots()
+  ax.axis('off')
   fig.set_size_inches( figSize, figSize )
+
+  # I put circles on fig (not ax) to get them to line up with arrows
   circle1 = plt.Circle(( 0.5 , 0.5 ), R, fill=False )
   fig.add_artist(circle1)
+  circle2 = plt.Circle(( 0.5 , 0.5 ), R, fill=False )
+  fig.add_artist(circle2)
 
-  # put annotation on a new axis to prevent it from being cleared each update
-  axAnn = plt.axes([.51, .03, .48, .07])
-  axAnn.axis('off')
-  axAnn.annotate('set phase (from 0 to 2*pi)', (0,0))
+  ax.annotate('set phase (from 0 to 2*pi)', (.51, .03), xycoords = 'figure fraction')
 
-  # slider and textbox also get their own axes
+  # interactive widgets
   slider = Slider(plt.axes([.2, .1, .6, .05]), '',
     valmin=0.0, valmax=2.0*pi, valinit=0.0, orientation="horizontal")
   textbox = TextBox(plt.axes([.2, .02, .3, .07]), '', initial = '')
 
-  def update(phase, first = False):
-    global circle2
-    ax.clear()
-    ax.axis('off')
-    if not first:
-      circle2.remove()
+  # create the N arrows
+  arrows = []
+  for i in range(N):
+      arrows.append( ax.annotate("", (0.6, 0.5), xytext = (0.5, 0.5),
+          arrowprops=dict(arrowstyle="->"), xycoords='figure fraction') )
+
+  def update(phase):
     tip = [.5, .5]   #begin in center of figure
     for i in range(N):
         theta = i*phase
         tipnew = [tip[0] + L0*math.cos(theta), tip[1] + L0*math.sin(theta)]
-        ax.annotate("", tuple(tipnew), xytext=tuple(tip),
-          arrowprops=dict(arrowstyle="->"), xycoords='figure fraction')   # draw arrow
+        arrows[i]._x = tip[0]
+        arrows[i]._y = tip[1]
+        arrows[i].xy = tuple(tipnew)
         tip = tipnew
-    circle2 = plt.Circle(tuple(tip), R, fill=False )
-    fig.add_artist(circle2)  # I put circles on fig (not ax) to get them to line up with arrows
+    circle2.center = tuple(tip)
     plt.draw()
 
   def update2(phase):
@@ -254,7 +254,7 @@ def phasors(N):
   slider.on_changed(update)
   textbox.on_submit(update2)
 
-  update(0.0, True)
+  update(0.0)
 
 
   ## show figures 2 and 3
