@@ -93,7 +93,6 @@ def makeAnimation(N, phaseList, Llist, y, thetaList = []):
 #          arrows[i] = ax.annotate("", (0.6, 0.5), xytext = (0.5, 0.5),
 #              arrowprops=dict(arrowstyle="->"), xycoords='figure fraction')
 
-  # for some reason, passing in y[] is needed for animation.FuncAnimation() to work correctly
   def animateFunc(frame):
       phase = phaseList[frame]
       L = Llist[frame]
@@ -102,7 +101,7 @@ def makeAnimation(N, phaseList, Llist, y, thetaList = []):
       # This is an extreme approach that slows the animation
       #   and requires that annotations (such as arrows) be created from scratch each time,
       #   but my macOS (not Windows or Linux) requires this for animation to update correctly.
-      # I have commented out code that can be used instead of this extreme approach.
+      # I have commented-out code that can be used instead of this extreme approach.
       if animate:
           ax.clear()
           ax.axis('off')
