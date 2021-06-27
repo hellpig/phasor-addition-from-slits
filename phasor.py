@@ -52,12 +52,13 @@ t = 10        #pause interval for animation (in milliseconds)
 # just like MATLAB's linspace()
 # except I assume that n > 1
 def linspace(a, b, n):
-    return [(b - a)/(n - 1)*i + a  for i in range(n)]
+    stepSize = (b - a)/(n - 1)
+    return [stepSize*i + a  for i in range(n)]
 
 
 # MATLAB's  a:stepSize:b
 def sequence(a, stepSize, b):
-    # err on the side of too many values because of roundoff error, hence 1.00000000000001
+    # because of roundoff error, err on the side of too many values, hence 1.00000000000001
     values = int(1.00000000000001 * (b-a) / stepSize) + 1
     return [a + i*stepSize for i in range(values)]
 
@@ -75,7 +76,7 @@ def makeAnimation(N, phaseList, Llist, y, thetaList = []):
   if animate:
 
       fig, ax = plt.subplots()
-      ax.axis('off')   # doing this here is redundant, but it prevents a flicker of the axes
+      ax.axis('off')
       fig.set_size_inches( figSize, figSize )
 
       ann = ax.annotate('', (0.1, 0.1), xycoords = 'figure fraction')
@@ -86,23 +87,36 @@ def makeAnimation(N, phaseList, Llist, y, thetaList = []):
       circle2 = plt.Circle(( 0.5 , 0.5 ), R, fill=False )
       fig.add_artist(circle2)
 
+#      # create the N arrows
+#      arrows = [0]*N
+#      for i in range(N):
+#          arrows[i] = ax.annotate("", (0.6, 0.5), xytext = (0.5, 0.5),
+#              arrowprops=dict(arrowstyle="->"), xycoords='figure fraction')
+
   # for some reason, passing in y[] is needed for animation.FuncAnimation() to work correctly
   def animateFunc(frame):
       phase = phaseList[frame]
       L = Llist[frame]
 
-      # remove stuff (the animation doesn't work unless I do this!)
+      # Clear entire axis,
+      # This is an extreme approach that slows the animation
+      #   and requires that annotations (such as arrows) be created from scratch each time,
+      #   but my macOS (not Windows or Linux) requires this for animation to update correctly.
+      # I have commented out code that can be used instead of this extreme approach.
       if animate:
           ax.clear()
           ax.axis('off')
 
       # here are the actual important calculations
-      tip = [.5, .5]  #begin in center of figure
+      tip = (.5, .5)  #begin in center of figure
       for i in range(N):
           angle = i*phase
-          tipnew = [tip[0] + L*math.cos(angle), tip[1] + L*math.sin(angle)]
+          tipnew = (tip[0] + L*math.cos(angle), tip[1] + L*math.sin(angle))
           if animate:
-              ax.annotate("", tuple(tipnew), xytext=tuple(tip),
+#              arrows[i]._x = tip[0]
+#              arrows[i]._y = tip[1]
+#              arrows[i].xy = tipnew
+              ax.annotate("", tipnew, xytext=tip,
                 arrowprops=dict(arrowstyle="->"), xycoords='figure fraction')   # draw arrow
           tip = tipnew
       y[frame] = ((tip[0]-.5)**2 + (tip[1]-.5)**2 )**0.5
@@ -110,13 +124,16 @@ def makeAnimation(N, phaseList, Llist, y, thetaList = []):
       if animate:
 
           if len(thetaList):
-              ann.set_text('θ = ' + str(round(thetaList[frame]*180/pi,4)) + '°')
+#              ann.set_text('θ = ' + str(round(thetaList[frame]*180/pi,4)) + '°')
+              ann = ax.annotate('θ = ' + str(round(thetaList[frame]*180/pi,4)) + '°',
+                (0.1, 0.1), xycoords = 'figure fraction')
 
-          circle2.center = tuple(tip)
+          circle2.center = tip
 
           plt.draw()
 
-#          # The following still required me to wiggle my mouse after window closes!
+#          # On macOS, the following still required me to wiggle my mouse after window closes!
+#          # Regardless of OS, I don't know if I want the window to automatically close.
 #          if frame == length-1:
 #             plt.close()
 
@@ -230,21 +247,21 @@ def phasors(N):
   textbox = TextBox(plt.axes([.2, .02, .3, .07]), '', initial = '')
 
   # create the N arrows
-  arrows = []
+  arrows = [0]*N
   for i in range(N):
-      arrows.append( ax.annotate("", (0.6, 0.5), xytext = (0.5, 0.5),
-          arrowprops=dict(arrowstyle="->"), xycoords='figure fraction') )
+      arrows[i] = ax.annotate("", (0.6, 0.5), xytext = (0.5, 0.5),
+          arrowprops=dict(arrowstyle="->"), xycoords='figure fraction')
 
   def update(phase):
-    tip = [.5, .5]   #begin in center of figure
+    tip = (.5, .5)   #begin in center of figure
     for i in range(N):
         theta = i*phase
-        tipnew = [tip[0] + L0*math.cos(theta), tip[1] + L0*math.sin(theta)]
+        tipnew = (tip[0] + L0*math.cos(theta), tip[1] + L0*math.sin(theta))
         arrows[i]._x = tip[0]
         arrows[i]._y = tip[1]
-        arrows[i].xy = tuple(tipnew)
+        arrows[i].xy = tipnew
         tip = tipnew
-    circle2.center = tuple(tip)
+    circle2.center = tip
     plt.draw()
 
   def update2(phase):
