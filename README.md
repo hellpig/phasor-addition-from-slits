@@ -5,7 +5,16 @@ phasor.py contains 3 main functions. Each function studies the interference of l
  * phasorsSingle(a) animates and graphs single-slit patterns
  * phasorsFull(N, d, a) animates and graphs N slits of width a, where d > a is the distance between the centers of adjacent slits
 
+
 All distance units are the light's wavelength.
+
+phasors(4) interactive mode:  
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+![sample image 2](screenshot2.jpg)
+
+phasorsFull(10, 4, 1) graphs:  
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+![sample image 1](screenshot1.jpg)
 
 See the top of phasor.py for how to import the functions into Python 3! The matplotlib module is required. I thought it would be interesting to not import the numpy module, so I don't import it!
 
