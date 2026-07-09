@@ -22,7 +22,7 @@ To complete an animation, close the figure window. Or, you may set *animate = Fa
 
 According to Kirchhoff's diffraction formula, intensity of far-screen
 (Fraunhofer) diffraction through a single slit acquires an obliquity factor of
-(1+cos(theta))^2/4 that the Huygens-Fresnel principle cannot derive.
+(1+cos(theta))^2/4 that the simplest Huygens-Fresnel principle cannot derive.
 In any animation that takes into account slit width, the length of each arrow changes due to this factor.
 Even with this factor, all results are approximate due to approximations
 made in deriving Kirchhoff's diffraction formula. Results are especially

@@ -177,6 +177,7 @@ def phasors(N):
   if N < 2 or round(N) != float(N):
     print('Error: N must be an integer larger than 1')
     return
+  N = int(N)  # in case of something like N = 2.0
 
   L0 = 0.99/(2*N)  #length of arrow (in units where 1 is figSize)
 
@@ -264,7 +265,10 @@ def phasors(N):
     plt.draw()
 
   def update2(phase):
-    phase = float(eval(phase)) % (2*pi)
+    try:
+      phase = float(  eval(phase, {"__builtins__": {}}, {"pi": pi, "math": math})  ) % (2*pi)
+    except Exception:
+      return
     slider.set_val(phase)   # calls update(phase)
 
   slider.on_changed(update)
@@ -283,10 +287,11 @@ def phasors(N):
 
 
 def phasorsSingle(a):
-# a>0 is the slit width in units of the light's wavelength, and floor(a) is
-# the number of minima that will be in the diffraction pattern between
-# diffraction angles 0 and pi/2. That is, as a gets larger, the central
-# peak gets narrower. Keep a<10 if you are in a hurry.
+# a>0 is the slit width in units of the light's wavelength. The minima occur
+# when a*sin(theta) is a positive integer, so from 0 <= theta <= pi/2 there
+# are floor(a) minima. If a is an integer, the last one is at theta = pi/2.
+# That is, as a gets larger, the central peak gets narrower.
+# Keep a<10 if you are in a hurry.
 #
 # This function studies the interference of light waves that emerge in
 # phase from different parts of a single slit assuming a screen is far away
@@ -303,7 +308,7 @@ def phasorsSingle(a):
 #
 # According to Kirchhoff's diffraction formula, intensity of far-screen
 # (Fraunhofer) diffraction through a slit acquires an obliquity factor of
-# (1+cos(theta))^2/4 that the Huygens-Fresnel principle cannot derive.
+# (1+cos(theta))^2/4 that the simplest Huygens-Fresnel principle cannot derive.
 # In the animation, the length of each arrow changes due to this factor.
 # Even with this factor, all results are approximate due to approximations
 # made in deriving Kirchhoff's diffraction formula. Results are especially
@@ -417,6 +422,7 @@ def phasorsFull(N,d,a):
   if a<=0 or a>=d or N<2 or round(N)!=float(N) or d<=0:
     print('Error: invalid input')
     return
+  N = int(N)  # in case of something like N = 2.0
 
 
   L0 = .99/(2*N)  #max length of arrow (in units where 1 is figSize)
